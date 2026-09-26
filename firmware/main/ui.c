@@ -290,7 +290,7 @@ static void render_home(void)
         lv_obj_set_style_border_color(s_ring, lv_color_hex(color_of_state(a->state)), 0);
         lv_label_set_text(s_home_header, s_machine_name);
         lv_label_set_text(s_home_name, a->name);
-        char sub[NAME_MAX + 16];
+        char sub[NAME_MAX + 32];
         snprintf(sub, sizeof(sub), "%s%s%s%s%s", a->engine,
                  a->engine[0] && a->machine[0] ? " · " : "",
                  a->machine,
@@ -329,7 +329,7 @@ static void render_question(void)
     if (!q || s_q_index >= q->count) return;
     const cable_question_item_t *item = &q->items[s_q_index];
 
-    char header[NAME_MAX + 16];
+    char header[NAME_MAX + 40];
     snprintf(header, sizeof(header), "%s · Q %d/%d", q->name, s_q_index + 1, q->count);
     lv_label_set_text(s_q_header, header);
     lv_label_set_text(s_q_text, item->q[0] ? item->q : item->key);
