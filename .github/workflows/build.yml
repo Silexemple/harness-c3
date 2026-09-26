@@ -17,16 +17,19 @@ jobs:
       - name: Run host tests
         run: bash firmware/test/host/run_tests.sh
 
-  # Firmware build in the pinned ESP-IDF container.
+  # Firmware build with the official ESP-IDF installer action (container-free:
+  # job containers override the image entrypoint, which left idf.py off PATH).
   firmware:
     runs-on: ubuntu-latest
-    container: espressif/idf:v5.5
     steps:
       - uses: actions/checkout@v4
+      - name: Install ESP-IDF v5.5
+        uses: espressif/idf-install-action@v1
+        with:
+          esp_idf_version: v5.5
+          target: esp32c3
       - name: Build
         run: |
-          # GH Actions remplace l'entrypoint de l'image : exporter l'env IDF nous-mêmes.
-          . "$IDF_PATH/export.sh"
           cd firmware
           idf.py set-target esp32c3
           idf.py build
