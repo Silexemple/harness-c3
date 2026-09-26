@@ -60,8 +60,8 @@ jobs:
       - name: Copy binaries into docs/webflasher/bin
         run: |
           mkdir -p docs/webflasher/bin
-          cp /tmp/bins/bootloader.bin docs/webflasher/bin/bootloader.bin
-          cp /tmp/bins/partition-table.bin docs/webflasher/bin/partition-table.bin
+          cp /tmp/bins/bootloader/bootloader.bin docs/webflasher/bin/bootloader.bin
+          cp /tmp/bins/partition_table/partition-table.bin docs/webflasher/bin/partition-table.bin
           cp /tmp/bins/ota_data_initial.bin docs/webflasher/bin/ota_data_initial.bin
           cp /tmp/bins/harness-c3.bin docs/webflasher/bin/harness-c3.bin
       - name: Regenerate manifest.json
@@ -116,8 +116,8 @@ jobs:
           esptool.py --chip esp32c3 merge_bin \
             --output harness-c3-merged.bin \
             --flash_mode qio --flash_freq 80m --flash_size 4MB \
-            0x0 bootloader.bin \
-            0x8000 partition-table.bin \
+            0x0 bootloader/bootloader.bin \
+            0x8000 partition_table/partition-table.bin \
             0xf000 ota_data_initial.bin \
             0x20000 harness-c3.bin
       - name: Source zip
@@ -126,8 +126,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            /tmp/bins/bootloader.bin
-            /tmp/bins/partition-table.bin
+            /tmp/bins/bootloader/bootloader.bin
+            /tmp/bins/partition_table/partition-table.bin
             /tmp/bins/ota_data_initial.bin
             /tmp/bins/harness-c3.bin
             /tmp/bins/harness-c3-merged.bin
