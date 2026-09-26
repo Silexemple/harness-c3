@@ -1,0 +1,13 @@
+# ESP-IDF build output
+firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/managed_components/
+firmware/dependencies.lock
+
+# Web flasher binaries are committed by CI from build artifacts, not by hand.
+# (docs/webflasher/bin IS tracked — do not ignore it.)
+
+# Host test scratch
+firmware/test/host/*.o
+__pycache__
