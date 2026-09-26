@@ -25,6 +25,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build
         run: |
+          # GH Actions remplace l'entrypoint de l'image : exporter l'env IDF nous-mêmes.
+          . "$IDF_PATH/export.sh"
           cd firmware
           idf.py set-target esp32c3
           idf.py build
