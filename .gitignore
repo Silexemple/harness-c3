@@ -11,3 +11,7 @@ firmware/dependencies.lock
 # Host test scratch
 firmware/test/host/*.o
 __pycache__
+
+# UI simulator scratch (fetched deps, objects, binary)
+tools/uisim/.deps/
+tools/uisim/uisim

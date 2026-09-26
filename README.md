@@ -24,6 +24,25 @@ done — and lets you read and answer agent questions from the device.
 - Speaks the upstream **cable** protocol (binary framing + JSON vocabulary)
   over the ESP32-C3's native USB — no Wi-Fi, no account, no pairing.
 
+## Screens
+
+These are **pixel-exact renders of the real firmware**, not redrawn artwork:
+`tools/uisim/` compiles the unmodified `ui.c` with LVGL v9.2 on a laptop and
+dumps the frames; the boards below are those frames mounted in the bezel.
+
+![Harness C3 screens — boot, offline, agent running, waiting, question](docs/assets/mockup-hero.png)
+
+![Multi-select question, toast notification, empty tab](docs/assets/mockup-flows.png)
+
+Individual 240×240 round frames live in
+[`docs/assets/screens/`](docs/assets/screens/). Regenerate everything with:
+
+```sh
+cd tools/uisim
+./build.sh /tmp/frames
+python3 compose_mockups.py /tmp/frames ../../docs/assets
+```
+
 ## Hardware
 
 | Item | Value |
@@ -81,6 +100,8 @@ idf.py build flash monitor
   tests of every message the firmware emits or parses.
 - `PROTOCOL.md` — the normative cable protocol spec (extracted from upstream).
 - `SPEC.md` — this port's architecture and acceptance criteria.
+- `tools/uisim/` — host UI simulator: runs the real `ui.c` on LVGL's software
+  renderer and dumps exact 240×240 frames (the README mockups' source).
 
 ## v1 limits
 
@@ -90,6 +111,10 @@ idf.py build flash monitor
   upstream images target ESP32-S3. Dual-OTA partitions and rollback plumbing
   are in place for a future C3-aware updater; until then, update via the web
   flasher or esptool.
+- The built-in Montserrat fonts cover ASCII + LVGL symbols only: non-ASCII
+  text arriving from the daemon (accents, CJK, emoji) renders as placeholder
+  boxes. The firmware's own strings are ASCII-clean; bundling a Latin-1 font
+  subset is on the roadmap.
 
 ## Credits
 
@@ -121,6 +146,20 @@ répondre aux questions des agents directement depuis l'appareil.
 - Protocole **cable** d'origine (trames binaires + vocabulaire JSON) sur l'USB
   natif du C3 — pas de Wi-Fi, pas de compte, pas d'appairage.
 
+## Écrans
+
+Ces images sont des **rendus pixel-par-pixel du vrai firmware**, pas des
+maquettes redessinées : `tools/uisim/` compile le `ui.c` non modifié avec
+LVGL v9.2 sur PC et capture les trames ; les planches ci-dessous sont ces
+trames montées dans le boîtier rond.
+
+![Écrans Harness C3 — démarrage, hors connexion, agent actif, en attente, question](docs/assets/mockup-hero.png)
+
+![Question multi-sélection, toast de notification, onglet vide](docs/assets/mockup-flows.png)
+
+Les trames rondes 240×240 individuelles sont dans
+[`docs/assets/screens/`](docs/assets/screens/).
+
 ## Matériel requis
 
 - ESP32-C3-MINI-1U (USB natif sur GPIO18/19).
@@ -147,6 +186,10 @@ répondre aux questions des agents directement depuis l'appareil.
 - Le daemon propose des mises à jour firmware pour ESP32-S3 : elles sont
   **toujours ignorées** (risque de brick — SPEC §9). La mise à jour se fait
   via le web flasher ou esptool.
+- Les polices Montserrat intégrées ne couvrent que l'ASCII + les symboles
+  LVGL : un texte non-ASCII venant du daemon (accents, CJK, emoji) affiche
+  des carrés. Les chaînes internes du firmware sont en ASCII ; embarquer un
+  sous-ensemble de police Latin-1 est prévu.
 
 ## Crédits
 

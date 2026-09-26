@@ -44,11 +44,11 @@
 // "cst9217+axp2101"/"cst816s" so a log line names what this dial actually is.
 #define CABLE_HW_NAME "esp32c3+gc9a01"
 
-// Field caps (PROTOCOL.md §11).
-#define ID_MAX   48   // agentId / request id (uuid or 32-hex) + NUL
-#ifndef NAME_MAX      // <limits.h> already provides one on host builds
-#define NAME_MAX 40
-#endif
+// Field caps (PROTOCOL.md §11). CABLE_NAME_MAX is deliberately NOT plain
+// NAME_MAX: <limits.h> owns that name (255) and a silent mismatch between
+// translation units would scramble the struct layouts below.
+#define ID_MAX          48   // agentId / request id (uuid or 32-hex) + NUL
+#define CABLE_NAME_MAX  40
 
 // How many agents the store holds. The list is the window's ACTIVE TAB and
 // nothing else; the rest of the fleet arrives as agents.end.total.
@@ -82,19 +82,19 @@
 //   "idle" | "running" | "waiting" | "done" | "error"
 typedef struct {
     char id[ID_MAX];
-    char name[NAME_MAX];
+    char name[CABLE_NAME_MAX];
     char engine[12];         // claude|codex|cursor|opencode|… ; "" when unsaid
     char state[12];          // derived tile state, see above
     char summary[100];       // last status line (turn.started) or recap (summary)
     char machine_id[ID_MAX]; // which machine this agent lives on ("" if unsaid)
-    char machine[NAME_MAX];  // that machine's display name
+    char machine[CABLE_NAME_MAX];  // that machine's display name
 } cable_agent_t;
 
 // One row of the window's unread list, as `notif.replace` carries it.
 typedef struct {
     char agent_id[ID_MAX];
-    char name[NAME_MAX];
-    char machine[NAME_MAX];
+    char name[CABLE_NAME_MAX];
+    char machine[CABLE_NAME_MAX];
     char summary[100];
     bool question;           // blocked on an answer vs finished turn
 } cable_notif_t;
@@ -113,8 +113,8 @@ typedef struct {
 typedef struct {
     char agent_id[ID_MAX];
     char request_id[ID_MAX];  // the daemon's opaque id, echoed back as requestId
-    char name[NAME_MAX];      // who is asking (rides on the frame)
-    char machine[NAME_MAX];
+    char name[CABLE_NAME_MAX];      // who is asking (rides on the frame)
+    char machine[CABLE_NAME_MAX];
     int  count;
     cable_question_item_t items[CABLE_Q_MAX];
 } cable_question_t;

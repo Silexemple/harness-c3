@@ -49,7 +49,7 @@ typedef enum {
 typedef struct {
     ui_ev_type_t type;
     union {
-        struct { bool up; char name[NAME_MAX]; } session;
+        struct { bool up; char name[CABLE_NAME_MAX]; } session;
         struct { char id[ID_MAX]; char state[12]; bool notify, beep; } agent;
         struct { int count; int questions; } notif;
         struct { char text[104]; } toast;
@@ -66,7 +66,7 @@ typedef enum { SCR_BOOT, SCR_OFFLINE, SCR_HOME, SCR_QUESTION } screen_t;
 
 static screen_t s_screen = SCR_BOOT;
 static bool     s_connected;
-static char     s_machine_name[NAME_MAX];
+static char     s_machine_name[CABLE_NAME_MAX];
 
 static cable_agent_t s_agents[CABLE_MAX_AGENTS];
 static int           s_agent_count;
@@ -88,7 +88,7 @@ static lv_obj_t *s_scr_boot, *s_scr_offline, *s_scr_home, *s_scr_question;
 static lv_obj_t *s_ring;        // circle object, border color = status ring
 static lv_obj_t *s_home_header; // machine name
 static lv_obj_t *s_home_name;   // agent name (Montserrat 20)
-static lv_obj_t *s_home_sub;    // engine · machine (14)
+static lv_obj_t *s_home_sub;    // engine - machine (14)
 static lv_obj_t *s_home_summary;// last summary line (14)
 static lv_obj_t *s_home_page;   // "2/3"
 static lv_obj_t *s_badge;       // fleet total badge
@@ -145,7 +145,7 @@ static lv_obj_t *new_label(lv_obj_t *parent, const char *text, const lv_font_t *
 static void build_boot(const char *fw_version)
 {
     s_scr_boot = new_screen();
-    new_label(s_scr_boot, "λ", &lv_font_montserrat_28, COL_TEXT, LV_ALIGN_CENTER, -46);
+    new_label(s_scr_boot, LV_SYMBOL_POWER, &lv_font_montserrat_28, COL_TEXT, LV_ALIGN_CENTER, -46);
     new_label(s_scr_boot, "Harness C3", &lv_font_montserrat_20, COL_TEXT, LV_ALIGN_CENTER, -4);
     char ver[48];
     snprintf(ver, sizeof(ver), "v%s", fw_version);
@@ -227,7 +227,7 @@ static void build_question(void)
     lv_obj_set_style_border_width(s_q_list, 0, 0);
     lv_obj_remove_flag(s_q_list, LV_OBJ_FLAG_SCROLLABLE);
 
-    s_q_hint = new_label(s_scr_question, "A: choisir · A long: OK · B: annuler",
+    s_q_hint = new_label(s_scr_question, "A: choisir - A long: OK - B: annuler",
                          &lv_font_montserrat_14, COL_DIM, LV_ALIGN_BOTTOM_MID, -22);
 }
 
@@ -274,6 +274,9 @@ static void show_screen(screen_t scr)
 
 static void render_home(void)
 {
+    // The empty state prints a two-line message; nudge it down so it cannot
+    // touch the machine-name header at the top of the inscribed square.
+    lv_obj_align(s_home_name, LV_ALIGN_CENTER, 0, s_agent_count == 0 ? -12 : -38);
     if (s_agent_count == 0) {
         lv_obj_set_style_border_color(s_ring, lv_color_hex(COL_IDLE), 0);
         lv_label_set_text(s_home_header, s_machine_name);
@@ -290,11 +293,11 @@ static void render_home(void)
         lv_obj_set_style_border_color(s_ring, lv_color_hex(color_of_state(a->state)), 0);
         lv_label_set_text(s_home_header, s_machine_name);
         lv_label_set_text(s_home_name, a->name);
-        char sub[NAME_MAX + 32];
+        char sub[CABLE_NAME_MAX + 32];
         snprintf(sub, sizeof(sub), "%s%s%s%s%s", a->engine,
-                 a->engine[0] && a->machine[0] ? " · " : "",
+                 a->engine[0] && a->machine[0] ? " - " : "",
                  a->machine,
-                 (a->engine[0] || a->machine[0]) && a->state[0] ? " · " : "",
+                 (a->engine[0] || a->machine[0]) && a->state[0] ? " - " : "",
                  a->state);
         lv_label_set_text(s_home_sub, sub);
         lv_label_set_text(s_home_summary, a->summary);
@@ -329,8 +332,8 @@ static void render_question(void)
     if (!q || s_q_index >= q->count) return;
     const cable_question_item_t *item = &q->items[s_q_index];
 
-    char header[NAME_MAX + 40];
-    snprintf(header, sizeof(header), "%s · Q %d/%d", q->name, s_q_index + 1, q->count);
+    char header[CABLE_NAME_MAX + 40];
+    snprintf(header, sizeof(header), "%s - Q %d/%d", q->name, s_q_index + 1, q->count);
     lv_label_set_text(s_q_header, header);
     lv_label_set_text(s_q_text, item->q[0] ? item->q : item->key);
 
@@ -357,8 +360,8 @@ static void render_question(void)
         lv_obj_center(l);
     }
     lv_label_set_text(s_q_hint, item->multi
-                      ? "A: naviguer · A long: cocher/OK · B: annuler"
-                      : "A: choisir · A long: OK · B: annuler");
+                      ? "A: naviguer - A long: cocher/OK - B: annuler"
+                      : "A: choisir - A long: OK - B: annuler");
 }
 
 static void question_show(void)

@@ -56,7 +56,7 @@ static bool          s_has_window;
 static bool     s_session;
 static uint32_t s_last_rx_ms;
 static uint32_t s_next_hello_ms;
-static char     s_machine_name[NAME_MAX];
+static char     s_machine_name[CABLE_NAME_MAX];
 static char     s_machine_id[ID_MAX];
 static char     s_selected[ID_MAX];
 
