@@ -24,10 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install ESP-IDF v5.5
-        uses: espressif/idf-install-action@v1
+        uses: espressif/install-esp-idf-action@v1
         with:
-          esp_idf_version: v5.5
-          target: esp32c3
+          version: v5.5
       - name: Build
         run: |
           cd firmware
