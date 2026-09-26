@@ -1,0 +1,51 @@
+# Harness C3 — sdkconfig.defaults (SPEC.md §3). ESP-IDF v5.5, target esp32c3.
+
+# ── target / flash / CPU ────────────────────────────────────────────────────
+CONFIG_IDF_TARGET="esp32c3"
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHMODE="qio"
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
+CONFIG_ESPTOOLPY_FLASHFREQ="80m"
+CONFIG_ESP32C3_DEFAULT_CPU_FREQ_160=y
+CONFIG_ESP32C3_DEFAULT_CPU_FREQ_MHZ=160
+CONFIG_COMPILER_OPTIMIZATION_RELEASE=y
+
+# ── console on the native USB port (shared with the cable protocol) ────────
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+
+# ── no radios: the cable is the whole connection ───────────────────────────
+CONFIG_ESP_WIFI_ENABLED=n
+CONFIG_BT_ENABLED=n
+
+# ── RTOS ────────────────────────────────────────────────────────────────────
+CONFIG_FREERTOS_HZ=1000
+# Task watchdog: panic after 10 s — a wedged UI or link task must reboot the
+# dial rather than freeze the screen.
+CONFIG_ESP_TASK_WDT_INIT=y
+CONFIG_ESP_TASK_WDT_PANIC=y
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=10
+CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0=y
+
+# ── partition table (dual OTA, see partitions.csv) ─────────────────────────
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# ── LVGL v9 (registry component lvgl/lvgl, keys from lvgl v9.2 Kconfig) ────
+# 16 bpp RGB565, dark default theme, only the three fonts the UI uses —
+# the app slot is 1.875 MB and every glyph counts. RGB565 byte swap for the
+# SPI panel is done in the flush callback (lv_draw_sw_rgb565_swap); v9 has no
+# LV_COLOR_16_SWAP Kconfig.
+CONFIG_LV_COLOR_DEPTH_16=y
+CONFIG_LV_USE_BUILTIN_MALLOC=y
+CONFIG_LV_MEM_SIZE=32768
+CONFIG_LV_OS_FREERTOS=y
+CONFIG_LV_USE_THEME_DEFAULT=y
+CONFIG_LV_THEME_DEFAULT_DARK=y
+CONFIG_LV_USE_FONT_COMPRESSED=y
+CONFIG_LV_FONT_MONTSERRAT_14=y
+CONFIG_LV_FONT_MONTSERRAT_20=y
+CONFIG_LV_FONT_MONTSERRAT_28=y
+CONFIG_LV_FONT_DEFAULT_MONTSERRAT_14=y
