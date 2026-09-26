@@ -1,0 +1,131 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  # Host-side protocol tests — no ESP-IDF, just gcc + python3 (SPEC.md §7).
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gcc python3
+      - name: Run host tests
+        run: bash firmware/test/host/run_tests.sh
+
+  # Firmware build in the pinned ESP-IDF container.
+  firmware:
+    runs-on: ubuntu-latest
+    container: espressif/idf:v5.5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          cd firmware
+          idf.py set-target esp32c3
+          idf.py build
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-bins
+          path: |
+            firmware/build/bootloader/bootloader.bin
+            firmware/build/partition_table/partition-table.bin
+            firmware/build/ota_data_initial.bin
+            firmware/build/harness-c3.bin
+          retention-days: 14
+
+  # Keep docs/webflasher/bin + manifest.json in sync on every push to main,
+  # so the GitHub Pages web flasher always offers the latest main build.
+  webflasher:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: firmware
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: firmware-bins
+          path: /tmp/bins
+      - name: Copy binaries into docs/webflasher/bin
+        run: |
+          mkdir -p docs/webflasher/bin
+          cp /tmp/bins/bootloader.bin docs/webflasher/bin/bootloader.bin
+          cp /tmp/bins/partition-table.bin docs/webflasher/bin/partition-table.bin
+          cp /tmp/bins/ota_data_initial.bin docs/webflasher/bin/ota_data_initial.bin
+          cp /tmp/bins/harness-c3.bin docs/webflasher/bin/harness-c3.bin
+      - name: Regenerate manifest.json
+        run: |
+          python3 - <<'EOF'
+          import json, pathlib
+          version = pathlib.Path("firmware/version.txt").read_text().strip()
+          parts = [
+              ("bin/bootloader.bin", 0x0000),
+              ("bin/partition-table.bin", 0x8000),
+              ("bin/ota_data_initial.bin", 0xf000),
+              ("bin/harness-c3.bin", 0x20000),
+          ]
+          manifest = {
+              "name": "Harness C3",
+              "version": version,
+              "new_install_prompt_erase": True,
+              "builds": [{
+                  "chipFamily": "ESP32-C3",
+                  "parts": [{"path": p, "offset": off} for p, off in parts],
+              }],
+          }
+          pathlib.Path("docs/webflasher/manifest.json").write_text(
+              json.dumps(manifest, indent=2) + "\n")
+          EOF
+      - name: Commit web flasher update
+        run: |
+          git config user.name "harness-c3-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add docs/webflasher/bin docs/webflasher/manifest.json
+          git diff --cached --quiet || git commit -m "webflasher: binaries for $(cat firmware/version.txt) ($(git rev-parse --short HEAD))"
+          git push
+
+  # Tagged releases: the 4 raw bins, a merged image for esptool users, and a
+  # source zip.
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: firmware
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: firmware-bins
+          path: /tmp/bins
+      - name: Merge binaries
+        run: |
+          pip install esptool
+          cd /tmp/bins
+          esptool.py --chip esp32c3 merge_bin \
+            --output harness-c3-merged.bin \
+            --flash_mode qio --flash_freq 80m --flash_size 4MB \
+            0x0 bootloader.bin \
+            0x8000 partition-table.bin \
+            0xf000 ota_data_initial.bin \
+            0x20000 harness-c3.bin
+      - name: Source zip
+        run: git archive --format=zip --prefix=harness-c3/ -o /tmp/harness-c3-source.zip HEAD
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            /tmp/bins/bootloader.bin
+            /tmp/bins/partition-table.bin
+            /tmp/bins/ota_data_initial.bin
+            /tmp/bins/harness-c3.bin
+            /tmp/bins/harness-c3-merged.bin
+            /tmp/harness-c3-source.zip
+          generate_release_notes: true

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Harness C3 — Web Flasher</title>
+<script type="module"
+        src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #141b23;
+    --border: #2b3642;
+    --text: #d7dde5;
+    --dim: #8b98a5;
+    --accent: #3b82f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.55;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.2rem; }
+  h1 .lambda { color: var(--accent); }
+  h2 { font-size: 1.1rem; margin-top: 2.2rem; border-bottom: 1px solid var(--border);
+       padding-bottom: 0.3rem; }
+  p, li { color: var(--text); }
+  .dim { color: var(--dim); }
+  code, pre {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.86em;
+  }
+  code { padding: 0.1em 0.35em; }
+  pre { padding: 0.8rem 1rem; overflow-x: auto; }
+  pre code { background: none; border: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 0.8rem 0; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.7rem; text-align: left; }
+  th { background: var(--panel); }
+  td:first-child { font-family: ui-monospace, Menlo, monospace; }
+  .flash-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.4rem;
+    text-align: center;
+    margin: 1.6rem 0;
+  }
+  .flash-box p { margin-top: 0.4rem; }
+  a { color: var(--accent); }
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--panel);
+    padding: 0.6rem 1rem;
+    border-radius: 0 6px 6px 0;
+    color: var(--dim);
+  }
+  esp-web-install-button button {
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.7rem 1.6rem;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1><span class="lambda">λ</span> Harness C3</h1>
+  <p class="dim">USB companion display for the
+    <a href="https://github.com/autonomous-ai/openharness">Harness</a> daemon —
+    ESP32-C3-MINI-1U + GC9A01 240×240 round panel.</p>
+
+  <div class="flash-box">
+    <esp-web-install-button manifest="manifest.json">
+      <button slot="activate">Connect &amp; Flash</button>
+      <span slot="unsupported">Your browser does not support WebSerial —
+        use Chrome or Edge (on HTTPS or localhost).</span>
+      <span slot="not-allowed">This page needs HTTPS or localhost to access
+        the serial port.</span>
+    </esp-web-install-button>
+    <p class="dim">Plug the device in with a data-capable USB-C cable, click
+      the button, pick the <code>USB JTAG/serial debug unit</code> port.</p>
+  </div>
+
+  <p class="note"><strong>Browser requirements:</strong> Chrome, Edge or Opera
+    (WebSerial API). The page must be served over <strong>HTTPS or
+    localhost</strong>. Firefox and Safari cannot flash from the browser —
+    use the manual method below.</p>
+
+  <h2>Wiring (default pin map)</h2>
+  <table>
+    <tr><th>Signal</th><th>GPIO</th><th>Note</th></tr>
+    <tr><td>SPI SCK</td><td>4</td><td>GC9A01 CLK</td></tr>
+    <tr><td>SPI MOSI (SDA)</td><td>5</td><td>GC9A01 DIN</td></tr>
+    <tr><td>LCD CS</td><td>2</td><td>strapping pin — CS idles high, safe at boot</td></tr>
+    <tr><td>LCD DC</td><td>3</td><td></td></tr>
+    <tr><td>LCD RST</td><td>10</td><td></td></tr>
+    <tr><td>LCD BL</td><td>6</td><td>backlight, active high</td></tr>
+    <tr><td>BTN_A</td><td>7</td><td>short = next, long = confirm</td></tr>
+    <tr><td>BTN_B</td><td>8</td><td>back / cancel — do not hold at boot</td></tr>
+    <tr><td>Buzzer (optionnel)</td><td>1</td><td><code>-1</code> in menuconfig disables it</td></tr>
+  </table>
+  <p class="dim">USB is the ESP32-C3's native port (GPIO18 = D−, GPIO19 = D+).
+    All pins are overridable under <em>menuconfig → Harness C3
+    Configuration</em>.</p>
+
+  <h2>Manual flashing</h2>
+  <p>With <a href="https://docs.espressif.com/projects/esptool/">esptool</a>,
+    using the merged image from the
+    <a href="https://github.com/Silexemple/harness-c3/releases">Releases</a>
+    page:</p>
+  <pre><code>esptool.py --chip esp32c3 write_flash 0x0 harness-c3-merged.bin</code></pre>
+  <p>Or from source with ESP-IDF v5.5:</p>
+  <pre><code>git clone https://github.com/Silexemple/harness-c3.git
+cd harness-c3/firmware
+idf.py set-target esp32c3
+idf.py build
+idf.py -p /dev/ttyACM0 flash monitor</code></pre>
+
+  <h2>After flashing</h2>
+  <p>Plug the dial into the computer running the Harness daemon. The screen
+    shows <em>“Plug into a Harness daemon”</em> until the daemon answers the
+    device’s <code>hello</code>, then the agent carousel appears.</p>
+
+  <p class="dim">Firmware version shown on the boot screen and reported to the
+    daemon is read from the running image — this page always flashes the
+    latest CI build of <code>main</code>.</p>
+</main>
+</body>
+</html>

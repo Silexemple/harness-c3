@@ -1,0 +1,79 @@
+# Harness C3 — every pin and tunable lives here (SPEC.md §2). NO pin number
+# may be hardcoded in C: change wiring in menuconfig, not in the sources.
+
+menu "Harness C3 Configuration"
+
+    menu "Display (GC9A01 240x240 round, SPI)"
+
+        config HARNESS_PIN_SPI_SCK
+            int "SPI SCK GPIO"
+            default 4
+        config HARNESS_PIN_SPI_MOSI
+            int "SPI MOSI (SDA) GPIO"
+            default 5
+        config HARNESS_PIN_LCD_CS
+            int "LCD CS GPIO"
+            default 2
+            help
+                GPIO2 is a strapping pin — CS idles high, safe at boot.
+        config HARNESS_PIN_LCD_DC
+            int "LCD DC GPIO"
+            default 3
+        config HARNESS_PIN_LCD_RST
+            int "LCD RST GPIO"
+            default 10
+        config HARNESS_PIN_LCD_BL
+            int "LCD backlight GPIO (LEDC PWM, active high)"
+            default 6
+
+        choice HARNESS_LCD_SPI_FREQ
+            prompt "LCD SPI clock"
+            default HARNESS_LCD_SPI_FREQ_40M
+            help
+                40 MHz is the safe default for hand wiring; 80 MHz works on
+                short, clean runs and halves full-frame time.
+            config HARNESS_LCD_SPI_FREQ_40M
+                bool "40 MHz"
+            config HARNESS_LCD_SPI_FREQ_80M
+                bool "80 MHz"
+        endchoice
+
+        config HARNESS_LCD_SPI_FREQ_HZ
+            int
+            default 40000000 if HARNESS_LCD_SPI_FREQ_40M
+            default 80000000 if HARNESS_LCD_SPI_FREQ_80M
+
+    endmenu
+
+    menu "Buttons (active-low, internal pull-ups)"
+
+        config HARNESS_PIN_BTN_A
+            int "Button A GPIO (short = next/scroll, long = confirm/yes)"
+            default 7
+        config HARNESS_PIN_BTN_B
+            int "Button B GPIO (short = back / no-cancel)"
+            default 8
+            help
+                GPIO8 is a strapping pin, pulled up — it must not be held
+                low at boot.
+
+    endmenu
+
+    config HARNESS_PIN_BUZZER
+        int "Buzzer GPIO (-1 disables)"
+        default 1
+        range -1 48
+        help
+            Passive buzzer on a spare PWM-capable GPIO. -1 = no buzzer;
+            buzzer.c becomes a no-op.
+
+    config HARNESS_MAX_AGENTS
+        int "Max agents held in the store"
+        default 8
+        range 1 16
+        help
+            The list is the window's ACTIVE TAB; the rest of the fleet
+            arrives as agents.end.total. 8 is plenty for a 240 px round
+            screen that shows one agent at a time.
+
+endmenu
