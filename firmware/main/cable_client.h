@@ -46,7 +46,9 @@
 
 // Field caps (PROTOCOL.md §11).
 #define ID_MAX   48   // agentId / request id (uuid or 32-hex) + NUL
+#ifndef NAME_MAX      // <limits.h> already provides one on host builds
 #define NAME_MAX 40
+#endif
 
 // How many agents the store holds. The list is the window's ACTIVE TAB and
 // nothing else; the rest of the fleet arrives as agents.end.total.
