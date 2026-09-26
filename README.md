@@ -1,5 +1,8 @@
 # λ Harness C3
 
+[![build](https://github.com/Silexemple/harness-c3/actions/workflows/build.yml/badge.svg)](https://github.com/Silexemple/harness-c3/actions/workflows/build.yml)
+[![web flasher](https://img.shields.io/badge/web_flasher-esp--web--tools-blue)](https://silexemple.github.io/harness-c3/webflasher/)
+
 A low-cost USB companion display for the
 [Harness](https://github.com/autonomous-ai/openharness) daemon, ported from
 the reference ESP32-S3 dial to an **ESP32-C3-MINI-1U + GC9A01 240×240 round
